@@ -1,0 +1,43 @@
+'''
+# 07/16/2023
+# Micropython code to read the time in the DS3231.
+# Run it only once with a DS3231 connected to a Raspberry Pi Pico on pins
+# 4 (I2C1 SDA, GP2) and 5 (I2C1 SCL, GP3).
+# To set the datetime, use the file set_time_ds3231.py
+'''
+
+from machine import I2C, Pin
+
+# Define DS3231 I2C Address
+DS3231_I2C_ADDRESS = 0x68 # most commom, scan I2C for more options
+
+# Initialize I2C
+i2c = I2C(1, scl=Pin(3), sda=Pin(2))
+
+# Convert binary coded decimal to normal decimal numbers
+def bcdToDec(bcd):
+    return (((bcd & 0xf0) >> 4) * 10 + (bcd & 0x0f))
+
+# Read time data from DS3231
+def read_time():
+    i2c.writeto(DS3231_I2C_ADDRESS, bytearray([0x00]))
+    data = i2c.readfrom(DS3231_I2C_ADDRESS, 7)
+
+    seconds = bcdToDec(data[0])
+    minutes = bcdToDec(data[1])
+    hours = bcdToDec(data[2] & 0x3f) # 24 hour time
+    day_of_week = bcdToDec(data[3]) # 1=Sunday, 7=Saturday
+    day_of_month = bcdToDec(data[4])
+    month = bcdToDec(data[5] & 0x1f) # ignore century bit
+    year = bcdToDec(data[6])
+
+    return (seconds, minutes, hours, day_of_week, day_of_month, month, year)
+
+# Get current time
+time_data = read_time()
+
+# Format as string
+time_str = "{:02d}:{:02d}:{:02d} Day of week: {} Date: {:02d}/{:02d}/20{:02d}".format(time_data[2], time_data[1], time_data[0], time_data[3], time_data[4], time_data[5], time_data[6])
+
+print(time_str)
+
