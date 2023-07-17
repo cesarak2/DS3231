@@ -1,0 +1,60 @@
+'''
+# 07/16/2023
+# Micropython code to set up the time in the DS3231.
+# Two ways to set it: manually and automatically by the parent system. 
+# Run it only once with a DS3231 connected to a Raspberry Pi Pico on pins
+# 4 (I2C1 SDA, GP2) and 5 (I2C1 SCL, GP3).
+'''
+
+from machine import I2C, Pin
+DS3231_I2C_ADDRESS = 104  # Decimal for 0x68
+i2c = I2C(1, scl=Pin(3), sda=Pin(2))
+
+
+def decToBcd(val):
+    return (val // 10 * 16) + (val % 10)
+
+
+def set_time_manually():
+    # Convert decimal time to BCD
+    seconds = decToBcd(50)     # 0 to 60
+    minutes = decToBcd(59)     # 0 to 60
+    hours = decToBcd(23)       # 0 to 23
+    day_of_week = decToBcd(7)  # 0 to 7
+        #1: Sunday
+        #2: Monday
+        #3: Tuesday
+        #4: Wednesday
+        #5: Thursday
+        #6: Friday
+        #7: Saturday
+    day_of_month = decToBcd(31) # 1 to 31
+    month = decToBcd(12)        # 1 to 12
+    year = decToBcd(23)         # for year 2023
+
+    # Set time on DS3231
+    buf = bytearray([0x00, seconds, minutes, hours, day_of_week, day_of_month, month, year])
+    i2c.writeto(DS3231_I2C_ADDRESS, buf)
+
+
+def set_time_automatically():
+    import utime #calls the library only if requested by the function
+    # Get current system time
+    (year, month, mday, hour, minute, second, wday, yday) = utime.localtime()
+
+    # Convert system time to BCD
+    seconds = decToBcd(second)
+    minutes = decToBcd(minute)
+    hours = decToBcd(hour)
+    day_of_week = decToBcd(wday + 1)  # Python's weekday starts from 0 (Monday) to 6 (Sunday)
+    day_of_month = decToBcd(mday)
+    month = decToBcd(month)
+    year = decToBcd(year - 2000)  # for year in 2000s
+
+    # Set time on DS3231
+    buf = bytearray([0x00, seconds, minutes, hours, day_of_week, day_of_month, month, year])
+    i2c.writeto(DS3231_I2C_ADDRESS, buf)
+
+
+#set_time_manually()
+set_time_automatically()
