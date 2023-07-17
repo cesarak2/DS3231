@@ -33,11 +33,13 @@ def read_time():
 
     return (seconds, minutes, hours, day_of_week, day_of_month, month, year)
 
-# Get current time
-time_data = read_time()
 
-# Format as string
-time_str = "{:02d}:{:02d}:{:02d} Day of week: {} Date: {:02d}/{:02d}/20{:02d}".format(time_data[2], time_data[1], time_data[0], time_data[3], time_data[4], time_data[5], time_data[6])
+if __name__ == "__main__":
+    # Get current time
+    time_data = read_time()
 
-print(time_str)
+    # Format as string
+    time_str = "{:02d}:{:02d}:{:02d} Day of week: {} Date: {:02d}/{:02d}/20{:02d}".format(time_data[2], time_data[1], time_data[0], time_data[3], time_data[4], time_data[5], time_data[6])
+
+    print(time_str)
 
